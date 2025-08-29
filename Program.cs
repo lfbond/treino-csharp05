@@ -1,153 +1,178 @@
-﻿/* //Exercício 01
+﻿/*
+This application manages transactions at a store check-out line. The
+check-out line has a cash register, and the register has a cash till
+that is prepared with a number of bills each morning. The till includes
+bills of four denominations: $1, $5, $10, and $20. The till is used
+to provide the customer with change during the transaction. The item 
+cost is a randomly generated number between 2 and 49. The customer 
+offers payment based on an algorithm that determines a number of bills
+in each denomination. 
 
-This code uses a names array and corresponding methods to display
-greeting messages
+Each day, the cash till is loaded at the start of the day. As transactions
+occur, the cash till is managed in a method named MakeChange (customer 
+payments go in and the change returned to the customer comes out). A 
+separate "safety check" calculation that's used to verify the amount of
+money in the till is performed in the "main program". This safety check
+is used to ensure that logic in the MakeChange method is working as 
+expected.
 */
 
-/* string[] names = new string[] { "Sophia", "Andrew", "AllGreetings" };
 
-string messageText = "";
+string? readResult = null;
+bool useTestData = false;
 
-foreach (string name in names)
+Console.Clear();
+
+int[] cashTill = new int[] { 0, 0, 0, 0 };
+int registerCheckTillTotal = 0;
+
+// registerDailyStartingCash: $1 x 50, $5 x 20, $10 x 10, $20 x 5 => ($350 total)
+int[,] registerDailyStartingCash = new int[,] { { 1, 50 }, { 5, 20 }, { 10, 10 }, { 20, 5 } };
+
+int[] testData = new int[] { 6, 10, 17, 20, 31, 36, 40, 41 };
+int testCounter = 0;
+
+LoadTillEachMorning(registerDailyStartingCash, cashTill);
+
+registerCheckTillTotal = registerDailyStartingCash[0, 0] * registerDailyStartingCash[0, 1] + registerDailyStartingCash[1, 0] * registerDailyStartingCash[1, 1] + registerDailyStartingCash[2, 0] * registerDailyStartingCash[2, 1] + registerDailyStartingCash[3, 0] * registerDailyStartingCash[3, 1];
+
+// display the number of bills of each denomination currently in the till
+LogTillStatus(cashTill);
+
+// display a message showing the amount of cash in the till
+Console.WriteLine(TillAmountSummary(cashTill));
+
+// display the expected registerDailyStartingCash total
+Console.WriteLine($"Expected till value: {registerCheckTillTotal}");
+Console.WriteLine();
+
+var valueGenerator = new Random((int)DateTime.Now.Ticks);
+
+int transactions = 10;
+
+if (useTestData)
 {
-    if (name == "Sophia")
-        messageText = SophiaMessage();
-    else if (name == "Andrew")
-        messageText = AndrewMessage();
-    else if (name == "AllGreetings")
-        messageText = SophiaMessage() + "\n\r" + AndrewMessage();
-
-    Console.WriteLine(messageText + "\n\r");
+    transactions = testData.Length;
 }
 
-bool pauseCode = true;
-while (pauseCode == true);
-
-static string SophiaMessage()
+while (transactions > 0)
 {
-    return "Hello, my name is Sophia.";
-}
+    transactions -= 1;
+    int itemCost = valueGenerator.Next(2, 50);
 
-static string AndrewMessage()
-{
-    return "Hi, my name is Andrew. Good to meet you.";
-} */
-
-/* //Exercício 02
-
-int productCount = 2000;
-string[,] products = new string[productCount, 2];
-
-LoadProducts(products, productCount);
-
-for (int i = 0; i < productCount; i++)
-{
-    string result;
-    result = Process1(products, i);
-
-    if (result != "obsolete")
+    if (useTestData)
     {
-        result = Process2(products, i);
+        itemCost = testData[testCounter];
+        testCounter += 1;
     }
-}
 
-bool pauseCode = true;
-while (pauseCode == true) ;
+    int paymentOnes = itemCost % 2;                 // value is 1 when itemCost is odd, value is 0 when itemCost is even
+    int paymentFives = (itemCost % 10 > 7) ? 1 : 0; // value is 1 when itemCost ends with 8 or 9, otherwise value is 0
+    int paymentTens = (itemCost % 20 > 13) ? 1 : 0; // value is 1 when 13 < itemCost < 20 OR 33 < itemCost < 40, otherwise value is 0
+    int paymentTwenties = (itemCost < 20) ? 1 : 2;  // value is 1 when itemCost < 20, otherwise value is 2
 
-static void LoadProducts(string[,] products, int productCount)
-{
-    Random rand = new Random();
+    // display messages describing the current transaction
+    Console.WriteLine($"Customer is making a ${itemCost} purchase");
+    Console.WriteLine($"\t Using {paymentTwenties} twenty dollar bills");
+    Console.WriteLine($"\t Using {paymentTens} ten dollar bills");
+    Console.WriteLine($"\t Using {paymentFives} five dollar bills");
+    Console.WriteLine($"\t Using {paymentOnes} one dollar bills");
 
-    for (int i = 0; i < productCount; i++)
+    try
     {
-        int num1 = rand.Next(1, 10000) + 10000;
-        int num2 = rand.Next(1, 101);
+        // MakeChange manages the transaction and updates the till 
+        MakeChange(itemCost, cashTill, paymentTwenties, paymentTens, paymentFives, paymentOnes);
 
-        string prodID = num1.ToString();
-
-        if (num2 < 91)
-        {
-            products[i, 1] = "existing";
-        }
-        else if (num2 == 91)
-        {
-            products[i, 1] = "new";
-            prodID = prodID + "-n";
-        }
-        else
-        {
-            products[i, 1] = "obsolete";
-            prodID = prodID + "-0";
-        }
-
-        products[i, 0] = prodID;
+        // Backup Calculation - each transaction adds current "itemCost" to the till
+        registerCheckTillTotal += itemCost;
     }
+    catch (InvalidOperationException e)
+    {
+        Console.WriteLine($"Could not complete transaction: {e.Message}");
+    }
+
+    Console.WriteLine(TillAmountSummary(cashTill));
+    Console.WriteLine($"Expected till value: {registerCheckTillTotal}");
+    Console.WriteLine();
 }
 
-static string Process1(string[,] products, int item)
-{
-    Console.WriteLine($"Process1 message - working on {products[item, 1]} product");
-
-    return products[item, 1];
-}
-
-static string Process2(string[,] products, int item)
-{
-    Console.WriteLine($"Process2 message - working on product ID #: {products[item, 0]}");
-    if (products[item, 1] == "new")
-        Process3(products, item);
-
-    return "continue";
-}
-
-static void Process3(string[,] products, int item)
-{
-    Console.WriteLine($"Process3 message - processing product information for 'new' product");
-} */
-
-//Exercício 03
-string? readResult;
-int startIndex = 0;
-bool goodEntry = false;
-
-int[] numbers = { 1, 2, 3, 4, 5 };
-
-// Display the array to the console.
-/* Console.Clear(); */
-Console.Write("\n\rThe 'numbers' array contains: { ");
-foreach (int number in numbers)
-{
-    Console.Write($"{number} ");
-}
-
-// To calculate a sum of array elements, 
-//  prompt the user for the starting element number.
-Console.WriteLine($"}}\n\r\n\rTo sum values 'n' through 5, enter a value for 'n':");
-while (goodEntry == false)
+Console.WriteLine("Press the Enter key to exit");
+do
 {
     readResult = Console.ReadLine();
-    goodEntry = int.TryParse(readResult, out startIndex);
 
-    if (startIndex > 5)
-    {
-        goodEntry = false;
-        Console.WriteLine("\n\rEnter an integer value between 1 and 5");
-    }
+} while (readResult == null);
+
+
+static void LoadTillEachMorning(int[,] registerDailyStartingCash, int[] cashTill)
+{
+    cashTill[0] = registerDailyStartingCash[0, 1];
+    cashTill[1] = registerDailyStartingCash[1, 1];
+    cashTill[2] = registerDailyStartingCash[2, 1];
+    cashTill[3] = registerDailyStartingCash[3, 1];
 }
 
-// Display the sum and then pause.
-Console.WriteLine($"\n\rThe sum of numbers {startIndex} through {numbers.Length} is: {SumValues(numbers, startIndex)}");
 
-Console.WriteLine("press Enter to exit");
-readResult = Console.ReadLine();
-
-// This method returns the sum of elements n through 5
-static int SumValues(int[] numbers, int n)
+static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int fives = 0, int ones = 0)
 {
-    int sum = 0;
-    for (int i = n; i < numbers.Length; i++)
+    cashTill[3] += twenties;
+    cashTill[2] += tens;
+    cashTill[1] += fives;
+    cashTill[0] += ones;
+
+    int amountPaid = twenties * 20 + tens * 10 + fives * 5 + ones;
+    int changeNeeded = amountPaid - cost;
+
+    if (changeNeeded < 0)
+        throw new InvalidOperationException("Not enough money provided");
+
+    Console.WriteLine("Cashier Returns:");
+
+    while ((changeNeeded > 19) && (cashTill[3] > 0))
     {
-        sum += numbers[i];
+        cashTill[3]--;
+        changeNeeded -= 20;
+        Console.WriteLine("\t A twenty");
     }
-    return sum;
+
+    while ((changeNeeded > 9) && (cashTill[2] > 0))
+    {
+        cashTill[2]--;
+        changeNeeded -= 10;
+        Console.WriteLine("\t A ten");
+    }
+
+    while ((changeNeeded > 4) && (cashTill[1] > 0))
+    {
+        cashTill[1]--;
+        changeNeeded -= 5;
+        Console.WriteLine("\t A five");
+    }
+
+    while ((changeNeeded > 0) && (cashTill[0] > 0))
+    {
+        cashTill[0]--;
+        changeNeeded -= 1;
+        Console.WriteLine("\t A one");
+    }
+
+    if (changeNeeded > 0)
+        throw new InvalidOperationException("Can't make change. Do you have anything smaller?");
+
+}
+
+static void LogTillStatus(int[] cashTill)
+{
+    Console.WriteLine("The till currently has:");
+    Console.WriteLine($"{cashTill[3] * 20} in twenties");
+    Console.WriteLine($"{cashTill[2] * 10} in tens");
+    Console.WriteLine($"{cashTill[1] * 5} in fives");
+    Console.WriteLine($"{cashTill[0]} in ones");
+    Console.WriteLine();
+}
+
+static string TillAmountSummary(int[] cashTill)
+{
+    return $"The till has {cashTill[3] * 20 + cashTill[2] * 10 + cashTill[1] * 5 + cashTill[0]} dollars";
+
 }
