@@ -1,4 +1,5 @@
-﻿/* 
+﻿/* //Exercício 01
+
 This code uses a names array and corresponding methods to display
 greeting messages
 */
@@ -31,6 +32,8 @@ static string AndrewMessage()
 {
     return "Hi, my name is Andrew. Good to meet you.";
 } */
+
+/* //Exercício 02
 
 int productCount = 2000;
 string[,] products = new string[productCount, 2];
@@ -100,4 +103,51 @@ static string Process2(string[,] products, int item)
 static void Process3(string[,] products, int item)
 {
     Console.WriteLine($"Process3 message - processing product information for 'new' product");
+} */
+
+//Exercício 03
+string? readResult;
+int startIndex = 0;
+bool goodEntry = false;
+
+int[] numbers = { 1, 2, 3, 4, 5 };
+
+// Display the array to the console.
+/* Console.Clear(); */
+Console.Write("\n\rThe 'numbers' array contains: { ");
+foreach (int number in numbers)
+{
+    Console.Write($"{number} ");
+}
+
+// To calculate a sum of array elements, 
+//  prompt the user for the starting element number.
+Console.WriteLine($"}}\n\r\n\rTo sum values 'n' through 5, enter a value for 'n':");
+while (goodEntry == false)
+{
+    readResult = Console.ReadLine();
+    goodEntry = int.TryParse(readResult, out startIndex);
+
+    if (startIndex > 5)
+    {
+        goodEntry = false;
+        Console.WriteLine("\n\rEnter an integer value between 1 and 5");
+    }
+}
+
+// Display the sum and then pause.
+Console.WriteLine($"\n\rThe sum of numbers {startIndex} through {numbers.Length} is: {SumValues(numbers, startIndex)}");
+
+Console.WriteLine("press Enter to exit");
+readResult = Console.ReadLine();
+
+// This method returns the sum of elements n through 5
+static int SumValues(int[] numbers, int n)
+{
+    int sum = 0;
+    for (int i = n; i < numbers.Length; i++)
+    {
+        sum += numbers[i];
+    }
+    return sum;
 }
