@@ -113,7 +113,7 @@ bool goodEntry = false;
 int[] numbers = { 1, 2, 3, 4, 5 };
 
 // Display the array to the console.
-/* Console.Clear(); */
+
 Console.Write("\n\rThe 'numbers' array contains: { ");
 foreach (int number in numbers)
 {
